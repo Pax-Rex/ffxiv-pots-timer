@@ -36,6 +36,9 @@ function renderAlarms() {
   container.innerHTML = "";
 
   ["North", "South"].forEach(name => {
+    const minute = name === "North" ? northMinute : southMinute;
+    const commandText = `/alarm &quot;${name} Pots FATE&quot; lt rp ${minute} 10 se01`;
+
     const section = document.createElement("div");
     section.className = "pot-section";
     section.id = `${name}-section`;
@@ -43,17 +46,18 @@ function renderAlarms() {
     section.innerHTML = `
       <div class="pot-title">${name.toUpperCase()} POTS</div>
       <div class="divider"></div>
-      <div class="spawn-time">🕒 Spawn Time: ${name === "North" ? formatMinute(northMinute) : formatMinute(southMinute)}</div>
+      <div class="spawn-time">🕒 Spawn Time: ${formatMinute(minute)}</div>
       <div class="pot-timer" id="${name}-timer">⏳ Calculating…</div>
       <div class="command-row">
-        <div class="command-text">/alarm ${name} lt rp ${name === "North" ? northMinute : southMinute} se01</div>
-        <button onclick="copyCommand('/alarm ${name} lt rp ${name === "North" ? northMinute : southMinute} se01')">Copy</button>
+        <div class="command-text">${commandText}</div>
+        <button onclick="copyCommand('${commandText}')">Copy</button>
       </div>
     `;
 
     container.appendChild(section);
   });
 }
+
 
 /* ===== COPY ===== */
 function copyCommand(text) {
