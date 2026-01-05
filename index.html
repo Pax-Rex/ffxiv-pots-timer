@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Occult Crescent Pot Timers</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+
+
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1e293b, #020617);
+  font-family: system-ui, sans-serif;
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  width: 520px;
+  padding: 2rem;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  border: 2px solid #c9aa71;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(201,170,113,0.25);
+}
+
+h1 {
+  font-family: "Cinzel", serif;
+  text-align: center;
+  color: #f5e6b8;
+  margin-top: 0;
+}
+
+p {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.95rem;
+}
+
+/* Controls */
+
+.section {
+  margin-top: 1.5rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+button {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #c9aa71;
+  background: linear-gradient(180deg, #3b2f1c, #1f1a12);
+  color: #f5e6b8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: linear-gradient(180deg, #4a3a22, #2a2116);
+}
+
+input, select {
+  background: #020617;
+  border: 1px solid #c9aa71;
+  color: #e5e7eb;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* Pot sections */
+
+.pot-section {
+  margin-top: 2rem;
+}
+
+.pot-title {
+  font-family: "Cinzel", serif;
+  font-size: 1.1rem;
+  color: #f5e6b8;
+  letter-spacing: 0.5px;
+}
+
+/* Decorative divider */
+.divider {
+  margin: 0.35rem 0 0.75rem;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    #c9aa71,
+    #f5e6b8,
+    #c9aa71,
+    transparent
+  );
+}
+
+.pot-timer {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.pot-timer.next {
+  color: #a7f3d0;
+  font-weight: 600;
+}
+
+.pot-timer.later {
+  color: #9ca3af;
+}
+
+.spawn-time {
+  font-size: 0.85rem;
+  color: #c9aa71;
+  margin-bottom: 0.5rem;
+}
+
+.command-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: monospace;
+}
+
+.command-text {
+  flex: 1;
+  padding: 0.5rem;
+  background: #0f172a;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.status {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #a7f3d0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.status.show {
+  opacity: 1;
+}
+</style>
+</head>
+
+<body>
+<div class="panel">
+  <h1>Occult Crescent Pots</h1>
+  <p>Track spawns and generate FFXIV alarm commands.</p>
+
+  <!-- Spawn buttons -->
+  <div class="section buttons">
+    <button onclick="setFromNow('North')">North Spawned</button>
+    <button onclick="setFromNow('South')">South Spawned</button>
+  </div>
+
+  <!-- Manual input -->
+  <div class="section buttons">
+    <select id="manualSide">
+      <option value="North">North</option>
+      <option value="South">South</option>
+    </select>
+    <input id="manualMinute" type="number" min="0" max="59" placeholder="Minute" />
+    <button onclick="setFromInput()">Set From Time</button>
+  </div>
+
+  <!-- Output -->
+  <div id="alarms" class="section"></div>
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+let northMinute = null;
+let southMinute = null;
+let nextPot = null;
+
+/* ===== SETTING TIMES ===== */
+function setFromNow(side) {
+  const minute = new Date().getMinutes();
+  if (side === "North") {
+    applyTimes(minute, (minute + 30) % 60);
+  } else {
+    applyTimes((minute + 30) % 60, minute);
+  }
+}
+
+function setFromInput() {
+  const side = document.getElementById("manualSide").value;
+  const minute = parseInt(document.getElementById("manualMinute").value, 10);
+  if (isNaN(minute) || minute < 0 || minute > 59) return;
+
+  if (side === "North") {
+    applyTimes(minute, (minute + 30) % 60);
+  } else {
+    applyTimes((minute + 30) % 60, minute);
+  }
+}
+
+function applyTimes(north, south) {
+  northMinute = north;
+  southMinute = south;
+  renderAlarms();
+}
+
+/* ===== RENDER ===== */
+function renderAlarms() {
+  const container = document.getElementById("alarms");
+  container.innerHTML = "";
+
+  ["North", "South"].forEach(name => {
+    const section = document.createElement("div");
+    section.className = "pot-section";
+    section.id = `${name}-section`;
+
+    section.innerHTML = `
+      <div class="pot-title">${name.toUpperCase()} POTS</div>
+      <div class="divider"></div>
+      <div class="spawn-time">🕒 Spawn Time: ${name === "North" ? formatMinute(northMinute) : formatMinute(southMinute)}</div>
+      <div class="pot-timer" id="${name}-timer">⏳ Calculating…</div>
+      <div class="command-row">
+        <div class="command-text">/alarm ${name} lt rp ${name === "North" ? northMinute : southMinute} se01</div>
+        <button onclick="copyCommand('/alarm ${name} lt rp ${name === "North" ? northMinute : southMinute} se01')">📋️Copy</button>
+      </div>
+    `;
+
+    container.appendChild(section);
+  });
+}
+
+/* ===== COPY ===== */
+function copyCommand(text) {
+  navigator.clipboard.writeText(text);
+  const s = document.getElementById("status");
+  s.textContent = `✓ Copied: ${text}`;
+  s.classList.add("show");
+  setTimeout(() => s.classList.remove("show"), 2000);
+}
+
+/* ===== COUNTDOWNS + NEXT ===== */
+function updateTimers() {
+  if (northMinute === null) return;
+
+  const now = new Date();
+  const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+  const times = {
+    North: getDiff(northMinute, nowSec),
+    South: getDiff(southMinute, nowSec)
+  };
+
+  nextPot = times.North <= times.South ? "North" : "South";
+
+  ["North", "South"].forEach(name => {
+    const diff = times[name];
+    const m = Math.floor(diff / 60);
+    const s = diff % 60;
+
+    const timer = document.getElementById(`${name}-timer`);
+
+    if (timer) {
+      timer.textContent = `⏳ Spawns in: ${m}:${s.toString().padStart(2,"0")}`;
+      if (name === nextPot) {
+        timer.classList.add("next");
+        timer.classList.remove("later");
+      } else {
+        timer.classList.add("later");
+        timer.classList.remove("next");
+      }
+    }
+  });
+}
+
+function getDiff(minute, nowSec) {
+  let target = Math.floor(nowSec / 3600) * 3600 + minute * 60;
+  if (target <= nowSec) target += 3600;
+  return target - nowSec;
+}
+
+function formatMinute(minute) {
+  return `X:${minute.toString().padStart(2,"0")}`;
+}
+
+setInterval(updateTimers, 1000);
+</script>
+</body>
+</html>
