@@ -24,6 +24,29 @@ function setFromInput() {
   }
 }
 
+function loadFromURL() {
+  const params = new URLSearchParams(window.location.search);
+
+  const south = params.get("south");
+  const north = params.get("north");
+
+  // Prefer explicit north if both are present
+  if (north !== null) {
+    const n = parseInt(north, 10);
+    if (!isNaN(n) && n >= 0 && n <= 59) {
+      applyTimes(n, (n + 30) % 60);
+    }
+    return;
+  }
+
+  if (south !== null) {
+    const s = parseInt(south, 10);
+    if (!isNaN(s) && s >= 0 && s <= 59) {
+      applyTimes((s + 30) % 60, s);
+    }
+  }
+}
+
 function applyTimes(north, south) {
   northMinute = north;
   southMinute = south;
@@ -66,6 +89,13 @@ function copyCommand(text) {
   s.textContent = `✓ Copied: ${text}`;
   s.classList.add("show");
   setTimeout(() => s.classList.remove("show"), 2000);
+}
+
+function copyShareLink() {
+  
+
+  const url = `${window.location.origin}${window.location.pathname}?north=${northMinute}`;
+  copyCommand(url);
 }
 
 /* ===== COUNTDOWNS + NEXT ===== */
@@ -112,4 +142,7 @@ function formatMinute(minute) {
   return `xx:${minute.toString().padStart(2,"0")}`;
 }
 
+document.getElementById("shareLinkBtn")
+  ?.addEventListener("click", copyShareLink);
 setInterval(updateTimers, 1000);
+loadFromURL();
