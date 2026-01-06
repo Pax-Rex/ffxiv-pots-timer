@@ -92,10 +92,15 @@ function copyCommand(text) {
 }
 
 function copyShareLink() {
-  
-
   const url = `${window.location.origin}${window.location.pathname}?north=${northMinute}`;
   copyCommand(url);
+  // Google Analytics event
+  if (typeof gtag === "function") {
+    gtag("event", "share_link_copied", {
+      event_category: "engagement",
+      event_label: "north_timer",
+      value: northMinute
+    });
 }
 
 /* ===== COUNTDOWNS + NEXT ===== */
