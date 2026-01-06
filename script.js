@@ -95,6 +95,19 @@ function copyShareLink() {
   const url = `${window.location.origin}${window.location.pathname}?north=${northMinute}`;
   copyCommand(url);
 
+  // Safe Google Analytics tracking
+  try {
+    if (window.gtag) {
+      window.gtag("event", "share_link_copied", {
+        event_category: "engagement",
+        event_label: "north_timer",
+        value: northMinute
+      });
+    }
+  } catch (e) {
+    // Fail silently – never break app functionality
+    console.warn("GA tracking failed:", e);
+  }
 }
 
 /* ===== COUNTDOWNS + NEXT ===== */
@@ -119,7 +132,12 @@ function updateTimers() {
     const timer = document.getElementById(`${name}-timer`);
 
     if (timer) {
-      timer.textContent = `⏳ Spawns in: ${m}:${s.toString().padStart(2,"0")}`;
+	if (diff === 0) {
+  		timer.textContent = "⏳ Spawning Now";
+	} else {
+  		timer.textContent = `⏳ Spawns in: ${m}:${s.toString().padStart(2,"0")}`;
+	}
+    
       if (name === nextPot) {
         timer.classList.add("next");
         timer.classList.remove("later");
@@ -131,11 +149,23 @@ function updateTimers() {
   });
 }
 
+
 function getDiff(minute, nowSec) {
-  let target = Math.floor(nowSec / 3600) * 3600 + minute * 60;
-  if (target <= nowSec) target += 3600;
-  return target - nowSec;
+  const hourStart = Math.floor(nowSec / 3600) * 3600;
+  const target = hourStart + minute * 60;
+
+  if (nowSec >= target && nowSec < target + 60) {
+    return 0;
+  }
+
+  let nextTarget = target;
+  if (nextTarget <= nowSec) {
+    nextTarget += 3600;
+  }
+
+  return nextTarget - nowSec;
 }
+
 
 function formatMinute(minute) {
   return `xx:${minute.toString().padStart(2,"0")}`;
@@ -145,4 +175,3 @@ document.getElementById("shareLinkBtn")
   ?.addEventListener("click", copyShareLink);
 setInterval(updateTimers, 1000);
 loadFromURL();
-
