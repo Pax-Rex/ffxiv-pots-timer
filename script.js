@@ -147,6 +147,31 @@ function updateTimers() {
       }
     }
   });
+
+// Update Next Spawn panel
+// Compact Next Spawn display
+const nextClock = document.getElementById("nextTimer");
+const nextLabel = document.getElementById("nextName");
+const nextSub = document.getElementById("nextTime");
+
+if (nextPot) {
+  const minute = nextPot === "North" ? northMinute : southMinute;
+  const diff = nextPot === "North" ? times.North : times.South;
+
+  nextLabel.textContent = `${nextPot.toUpperCase()} POTS`;
+  nextSub.textContent = `🕒 Spawn Time: ${formatMinute(minute)}`;
+
+  if (diff === 0) {
+    nextClock.textContent = "NOW";
+    nextClock.classList.add("spawning");
+  } else {
+    const m = Math.floor(diff / 60);
+    const s = diff % 60;
+    nextClock.textContent = `${m}:${s.toString().padStart(2,"0")}`;
+    nextClock.classList.remove("spawning");
+  }
+}
+
 }
 
 

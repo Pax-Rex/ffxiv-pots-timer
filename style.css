@@ -155,3 +155,52 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+
+
+/* Next styling */
+.next-spawn.compact {
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1rem;
+  background: linear-gradient(180deg, #020617, #0b1220);
+  border: 1px solid #c9aa71;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: inset 0 0 18px rgba(201,170,113,0.18);
+}
+
+.next-clock {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.next-clock.spawning {
+  color: #a7f3d0;
+  text-shadow: 0 0 10px rgba(234,255,20,0.6);
+}
+
+/* NORTH / SOUTH */
+.next-label {
+  margin-top: 0.35rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  color: #c9aa71;
+}
+
+/* Spawn time */
+.next-sub {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* Mobile tuning */
+@media (max-width: 600px) {
+  .next-clock {
+    font-size: 2.3rem;
+  }
+}
+
